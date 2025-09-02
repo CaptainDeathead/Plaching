@@ -40,6 +40,11 @@ function display_image(index) {
     document.getElementById("photo-view-overlay").style.display = "block";
 }
 
+function close_image_display() {
+    document.getElementById("photo-view-img").src = null;
+    document.getElementById('photo-view-overlay').style.display = 'none';
+}
+
 function loadBatch(batchSize, index, imageUrls) {
     const container = document.getElementById("photo-album");
     for (let i = 0; i < batchSize && index < imageUrls.length; i++, index++) {
