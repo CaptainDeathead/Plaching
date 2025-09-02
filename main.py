@@ -6,7 +6,7 @@ import shutil
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from werkzeug.utils import secure_filename
-from PIL import Image
+from PIL import Image, ImageOps
 from base64 import b64decode, b64encode
 from database import DatabaseManager
 from datetime import date
@@ -168,6 +168,7 @@ def upload_wedding_photo(wedding_id: str) -> any:
 
         img = Image.open(file)
         img = img.convert("RGBA")
+        img = ImageOps.exif_transpose(img) # portrait mode
         img.save(f"weddings/{wedding_id}/photos/{len(os.listdir(f'weddings/{wedding_id}/photos'))}.png", "PNG")
 
         # thumbnail
