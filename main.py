@@ -132,7 +132,7 @@ def get_wedding_photo(wedding_id: str, photo_index: int) -> str:
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def generate_thumbnail(img: Image, size: int = 150) -> img:
+def generate_thumbnail(img: Image, size: int = 150) -> Image:
     img.thumbnail((size, size), Image.LANCZOS)
 
     width, height = img.size
