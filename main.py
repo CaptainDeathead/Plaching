@@ -132,6 +132,21 @@ def get_wedding_photo(wedding_id: str, photo_index: int) -> str:
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def generate_thumbnail(img: Image, size: int = 150) -> img:
+    img.thumbnail((size, size), Image.LANCZOS)
+
+    width, height = img.size
+    min_side = min(width, height)
+
+    left = (width - min_side) // 2
+    top = (height - min_side) // 2
+    right = left + min_side
+    bottom = top + min_side
+
+    img_cropped = img.crop((left, top, right, bottom))
+
+    return img_cropped
+
 @app.route('/weddings/<wedding_id>/photos/upload', methods=["POST"])
 def upload_wedding_photo(wedding_id: str) -> any:
     if "file" not in flask.request.files:
@@ -150,6 +165,9 @@ def upload_wedding_photo(wedding_id: str) -> any:
         img = Image.open(file)
         img = img.convert("RGBA")
         img.save(f"weddings/{wedding_id}/photos/{len(os.listdir(f'weddings/{wedding_id}/photos'))}.png", "PNG")
+
+        # thumbnail
+        generate_thumbnail(img, 150).save(f"weddings/{wedding_id}/thumbnails/{len(os.listdir(f'weddings/{wedding_id}/thumbnails'))}.png", "PNG")
 
         return f"File uploaded successfully: {filename} (converted to PNG)"
 
@@ -181,6 +199,7 @@ def verify() -> str:
             shutil.rmtree(f"weddings/{wedding_id}")
 
         os.makedirs(f"weddings/{wedding_id}/photos")
+        os.makedirs(f"weddings/{wedding_id}/thumbnails")
 
         with open("emails/success.html", "r") as f:
             wedding_url = f"https://plaching.plazmasoftware.com/weddings/{wedding_id}"
