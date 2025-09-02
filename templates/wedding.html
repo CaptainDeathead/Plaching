@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plaching</title>
+    <link rel="stylesheet" href="/stylesheet.css">
+    <script src="/wedding.js"></script>
+</head>
+<body>
+    <h1 id="title">Welcome to FILLIN_FNAME & FILLIN_PFNAME FILLIN_LNAME's wedding album!</h1>
+    <h2>Photos</h2>
+    <div id="photo-album">
+
+    </div>
+    <br>
+    <div id="photo-view-overlay">
+        <div id="view-box">
+            <h2 id="photo-index"></h2>
+            <img id="photo-view-img" />
+            <br><br>
+            <button id="close-photo-view" onclick="document.getElementById('photo-view-overlay').style.display = 'none';">Close</button>
+        </div>
+    </div>
+    <div id="uploadOverlay">
+        <div id="uploadBox">
+            <h2>Upload Image</h2>
+            <input type="file" id="fileInput" accept="image/*">
+            <br><br>
+            <button id="uploadBtn">Upload</button>
+            <button id="closeUploader">Cancel</button>
+        </div>
+    </div>
+    <button id="openUploader">Upload a photo</button>
+</body>

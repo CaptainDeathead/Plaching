@@ -29,16 +29,18 @@ class DatabaseManager:
         self.db = self.db_client["plaching"]
         self.weddings = self.db["weddings"]
 
-    def get_wedding(self, phone: int) -> Dict | None:
-        return self.weddings.find_one({"phone": phone}) 
+    def get_wedding(self, email: str) -> Dict | None:
+        return self.weddings.find_one({"email": email}) 
 
-    def add_wedding(self, fname: str, lname: str, phone: int, email: str, date: datetime) -> None:
+    def add_wedding(self, fname: str, lname: str, pfname: str, phone: int, email: str, date: datetime) -> None:
         post = {
             "fname": fname,
             "lname": lname,
+            "pfname": pfname,
             "phone": phone,
             "email": email,
-            "date": date
+            "date": date,
+            "photos": {}
         }
 
         self.weddings.insert_one(post)

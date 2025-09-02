@@ -1,28 +1,9 @@
-import QRCodeStyling from "https://esm.sh/qr-code-styling@1.5.0";
-
-window.onload = function() {
+document.addEventListener("DOMContentLoaded", function(arg) {
     const searchParams = new URLSearchParams(window.location.search);
-    const id = searchParams.get("id")
+    const id = btoa(searchParams.get("email"));
 
-    document.getElementById("wedding-link").src = "/wedding?" + id;
+    const url = "http://192.168.0.70:5000/weddings/" + id;
 
-    const qrCode = new QRCodeStyling({
-        width: 300,
-        height: 300,
-        data: "http://192.168.0.36:5000/wedding?" + id,
-        image: "http://192.168.0.36:5000/favicon.png",
-        dotsOptions: {
-            color: "#000",
-            type: "rounded"
-        },
-        backgroundOptions: {
-            color: "#fff",
-        },
-        imageOptions: {
-            crossOrigin: "anonymous",
-            margin: 10
-        }
-    });
-
-    qrCode.append(document.getElementById("qr-img"));
-}
+    document.getElementById("wedding-link").href = document.getElementById("wedding-link").textContent = url;
+    document.getElementById("qr-img").src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + url;
+});

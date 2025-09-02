@@ -1,14 +1,20 @@
 import flask
 import smtplib, ssl
+import os
+import shutil
 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from werkzeug.utils import secure_filename
+from PIL import Image
+from base64 import b64decode, b64encode
 from database import DatabaseManager
 from datetime import date
 from time import time, sleep
 from typing import Tuple
 
 app = flask.Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024 # 50MB
 
 database_manager = DatabaseManager()
 active_verifys = {}
@@ -18,6 +24,8 @@ with open("gmail_password.txt", "r") as f:
     password = f.read()
 
 context = ssl.create_default_context()
+
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
 def send_email(to: str, subject:str, html: str) -> None:
     message = MIMEMultipart("alternative")
@@ -66,26 +74,30 @@ def register_post() -> str:
     data = flask.request.get_json()
     fname = data.get('fname').strip()
     lname = data.get('lname').strip()
+    pfname = data.get('pfname').strip()
     phone = data.get('phone').strip()
     email = data.get('email').strip()
     date = data.get('date').strip()
     
-    print(f"Received: {fname=}, {lname=}, {phone=}, {email=}, {date=}")
+    print(f"Received: {fname=}, {lname=}, {pfname=}, {phone=}, {email=}, {date=}")
 
-    if fname == "": return flask.jsonify({"status", "failure"}), 400
-    elif lname == "": return flask.jsonify({"status", "failure"}), 400
-    elif phone == "": return flask.jsonify({"status", "failure"}), 400
-    elif email == "": return flask.jsonify({"status", "failure"}), 400
-    elif date == "": return flask.jsonify({"status", "failure"}), 400
+    if fname == "": return flask.jsonify({"status": "failure"}), 400
+    elif lname == "": return flask.jsonify({"status": "failure"}), 400
+    elif pfname == "": return flask.jsonify({"status": "failure"}), 400
+    elif phone == "": return flask.jsonify({"status": "failure"}), 400
+    elif email == "": return flask.jsonify({"status": "failure"}), 400
+    elif date == "": return flask.jsonify({"status": "failure"}), 400
 
-    parsed_date = parse_date(date)
+    if database_manager.get_wedding(email) is not None:
+        return flask.jsonify({"status": "conflict"}), 409
 
     active_verifys[email] = {
         "fname": fname,
         "lname": lname,
+        "pfname": pfname,
         "phone": phone,
         "email": email,
-        "date": parsed_date,
+        "date": date,
         "init_time": time()
     }
 
@@ -95,14 +107,95 @@ def register_post() -> str:
     
     return flask.jsonify({"status": "success"}), 200
 
+@app.route('/register_next')
+def register_next() -> str:
+    return flask.render_template("register_next.html")
+
+@app.route('/weddings/<wedding_id>')
+def show_wedding(wedding_id: str) -> str:
+    try:
+        email = b64decode(wedding_id).decode()
+    except Exception as e:
+        return flask.render_template("wedding_not_found.html")
+
+    wedding = database_manager.get_wedding(email)
+
+    if wedding is None:
+        return flask.render_template("wedding_not_found.html")
+    
+    return flask.render_template("wedding.html")
+
+@app.route('/weddings/<wedding_id>/photos/<photo_index>')
+def get_wedding_photo(wedding_id: str, photo_index: int) -> str:
+    return flask.send_file(f"weddings/{wedding_id}/photos/{photo_index}.png")
+
+def allowed_file(filename: str) -> bool:
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/weddings/<wedding_id>/photos/upload', methods=["POST"])
+def upload_wedding_photo(wedding_id: str) -> any:
+    if "file" not in flask.request.files:
+        return "No file!", 400
+
+    file = flask.request.files["file"]
+    if file.filename == "":
+        return "No selected file!", 400
+
+    if allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+
+        if filename == "":
+            return "Bad filename", 400
+
+        img = Image.open(file)
+        img = img.convert("RGBA")
+        img.save(f"weddings/{wedding_id}/photos/{len(os.listdir(f"weddings/{wedding_id}/photos"))}.png", "PNG")
+
+        return f"File uploaded successfully: {filename} (converted to PNG)"
+
+    return "Invalid file", 400
+
+@app.route('/weddings/<wedding_id>/getInfo')
+def get_info(wedding_id: str) -> str:
+    email = b64decode(wedding_id).decode()
+    wedding = database_manager.get_wedding(email)
+
+    return flask.jsonify({
+        'fname': wedding['fname'],
+        'lname': wedding['lname'],
+        'pfname': wedding['pfname'],
+        'numPhotos': len(os.listdir(f"weddings/{wedding_id}/photos"))
+    })
+
 @app.route('/verify')
 def verify() -> str:
     email = flask.request.args.get('email')
 
     if email in active_verifys:
+        wedding_data = active_verifys[email]
+        database_manager.add_wedding(wedding_data["fname"], wedding_data["lname"], wedding_data["pfname"], wedding_data["phone"], wedding_data["email"], wedding_data["date"])
+        del active_verifys[email]
+
+        wedding_id = b64encode(email.encode()).decode()
+        if os.path.exists(f"weddings/{wedding_id}"):
+            shutil.rmtree(f"weddings/{wedding_id}")
+
+        os.makedirs(f"weddings/{wedding_id}/photos")
+
+        with open("emails/success.html", "r") as f:
+            wedding_url = f"http://192.168.0.70:5000/weddings/{wedding_id}"
+            qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={wedding_url}"
+
+            html = f.read().replace("WEDDING_URL", wedding_url).replace("WEDDING_QR_IMG", qr_url)
+            send_email(email, "Wedding Created!", html)
+
         return flask.render_template("verify_success.html")
     else:
         return flask.render_template("verify_fail.html")
+
+@app.route('/wedding.js')
+def wedding_js() -> str:
+    return flask.send_from_directory('scripts', 'wedding.js')
 
 @app.route('/register.js')
 def register_js() -> str:
@@ -112,7 +205,12 @@ def register_js() -> str:
 def veify_success_js() -> str:
     return flask.send_from_directory('scripts', 'verify_success.js')
 
+@app.route("/stylesheet.css")
+def stylesheet() -> str:
+    return flask.send_from_directory("styles", "stylesheet.css")
+
 @app.route('/favicon.png')
+@app.route('/favicon.ico')
 def favicon() -> str:
     return flask.send_file("favicon.png")
 
