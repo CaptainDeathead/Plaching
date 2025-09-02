@@ -100,12 +100,12 @@ function setupUploadMenu() {
         .then(res => res.text())
         .then(data => {
             alert(data);
+            window.location.reload();
         })
         .catch(err => {
             console.error(err);
             alert("Upload failed.");
+            window.location.reload();
         });
-
-        window.location.reload();
     };
 }
