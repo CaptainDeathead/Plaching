@@ -149,7 +149,7 @@ def upload_wedding_photo(wedding_id: str) -> any:
 
         img = Image.open(file)
         img = img.convert("RGBA")
-        img.save(f"weddings/{wedding_id}/photos/{len(os.listdir(f"weddings/{wedding_id}/photos"))}.png", "PNG")
+        img.save(f"weddings/{wedding_id}/photos/{len(os.listdir(f'weddings/{wedding_id}/photos'))}.png", "PNG")
 
         return f"File uploaded successfully: {filename} (converted to PNG)"
 
@@ -183,7 +183,7 @@ def verify() -> str:
         os.makedirs(f"weddings/{wedding_id}/photos")
 
         with open("emails/success.html", "r") as f:
-            wedding_url = f"http://192.168.0.70:5000/weddings/{wedding_id}"
+            wedding_url = f"https://plaching.plazmasoftware.com/weddings/{wedding_id}"
             qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={wedding_url}"
 
             html = f.read().replace("WEDDING_URL", wedding_url).replace("WEDDING_QR_IMG", qr_url)
