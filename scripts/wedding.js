@@ -87,6 +87,9 @@ function setupUploadMenu() {
             return;
         }
 
+        document.getElementById("uploadOverlay").style.display = "none";
+        document.body.innerHTML = "<h1>Uploading...</h1>\n<h2>Please wait.</h2>";
+
         const formData = new FormData();
         formData.append("file", file);
 
@@ -97,11 +100,12 @@ function setupUploadMenu() {
         .then(res => res.text())
         .then(data => {
             alert(data);
-            document.getElementById("uploadOverlay").style.display = "none";
         })
         .catch(err => {
             console.error(err);
             alert("Upload failed.");
         });
+
+        window.location.reload();
     };
 }
