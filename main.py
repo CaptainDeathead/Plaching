@@ -129,6 +129,10 @@ def show_wedding(wedding_id: str) -> str:
 def get_wedding_photo(wedding_id: str, photo_index: int) -> str:
     return flask.send_file(f"weddings/{wedding_id}/photos/{photo_index}.png")
 
+@app.route('/weddings/<wedding_id>/thumbnails/<photo_index>')
+def get_wedding_thumbnail(wedding_id: str, photo_index: int) -> str:
+    return flask.send_file(f"weddings/{wedding_id}/thumbnails/{photo_index}.png")
+
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 

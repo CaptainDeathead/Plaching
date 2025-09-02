@@ -63,7 +63,7 @@ function populate_photos(numPhotos) {
     let imageUrls = [];
 
     for (let i = 0; i < numPhotos; i++) {
-        imageUrls.push(window.location.href + "/photos/" + i.toString());
+        imageUrls.push(window.location.href + "/thumbnails/" + i.toString());
     }
 
     loadBatch(batchSize, index, imageUrls);
