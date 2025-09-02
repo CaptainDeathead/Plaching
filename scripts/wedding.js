@@ -88,7 +88,7 @@ function setupUploadMenu() {
         }
 
         document.getElementById("uploadOverlay").style.display = "none";
-        document.body.innerHTML = "<h1>Uploading...</h1>\n<h2>Please wait.</h2>";
+        document.body.innerHTML = "<h1>Uploading...</h1>\n<h2>Please wait (Yes it is actually uploading). A popup will appear when the upload is complete. Please stay on this page.</h2>";
 
         const formData = new FormData();
         formData.append("file", file);
